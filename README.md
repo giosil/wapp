@@ -6,7 +6,7 @@ A simple cordova app based on jQuery Mobile.
 
 - `git clone https://github.com/giosil/wapp.git`
 - `npm install -g cordova`
-- `cordov add android`
+- `cordova add android`
 - `cordova build`
 
 ## Run
