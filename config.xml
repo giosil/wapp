@@ -4,8 +4,8 @@
     <description>
         Wrapped App
     </description>
-    <author email="info@dew.org" href="www.dew.org">
-        DEW
+    <author email="giorgio.silvestris@gmail.com" href="https://github.com/giosil/wapp">
+        giosil
     </author>
     <content src="index.html" />
     <access origin="*" />
