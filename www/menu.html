@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-menu" data-dom-cache="true">
+      <div role="main" class="ui-content">
+        <div class="swiper-container">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <img src="img/c_ana.png" title="Analisi">
+            </div>
+            <div class="swiper-slide">
+              <img src="img/c_sta.png" title="Statistiche">
+            </div>
+            <div class="swiper-slide">
+              <img src="img/c_mon.png" title="Monitoraggio">
+            </div>
+            <div class="swiper-slide">
+              <img src="img/c_app.png" title="Applicazione">
+            </div>
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+        <ul data-role="listview" data-inset="true" id="menu_ana" data-divider-theme="b" style="display: none;">
+          <li><a href="a_vendite.html"><i class="fa fa-tachometer"></i> &nbsp;Indici di vendita</a></li>
+          <li><a href="a_retail.html"><i class="fa fa-random"></i> &nbsp;Retail performance</a></li>
+        </ul>
+        <ul data-role="listview" data-inset="true" id="menu_sta" data-divider-theme="b" style="display: none;">
+          <li><a href="a_venduto_gio.html"><i class="fa fa-bar-chart"></i> &nbsp;Venduto giornaliero</a></li>
+          <li><a href="a_venduto_sem.html"><i class="fa fa-area-chart"></i> &nbsp;Andamento semestrale</a></li>
+          <li><a href="a_venduto_tip.html"><i class="fa fa-adjust"></i> &nbsp;Vendite per tipologia</a></li>
+        </ul>
+        <ul data-role="listview" data-inset="true" id="menu_mon" data-divider-theme="b" style="display: none;">
+          <li><a href="m_sintesi.html"><i class="fa fa-calculator"></i> &nbsp;Sintesi Vendite</a></li>
+          <li><a href="m_mappa.html"><i class="fa fa-map"></i> &nbsp;Punti Territorio</a></li>
+        </ul>
+        <ul data-role="listview" data-inset="true" id="menu_app" data-divider-theme="b" style="display: none;">
+          <li><a href="i_privacy.html"><i class="fa fa-balance-scale"></i> &nbsp;Privacy</a></li>
+          <li><a href="index.html" rel="external" onclick="app.notifyLogout();return true;"><i class="fa fa-external-link-square"></i> &nbsp;Logout</a></li>
+        </ul>
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        console.log("[menu] app.userLogged = " + app.userLogged);
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        $(document).off('pageshow','#jqm-menu').on('pageshow','#jqm-menu',function(){
+          app.exitOnBackKeyDown = true;
+          app.pageOnBackKeyDown = null;
+          app.lastSearch = null;
+          app.lastSearchResult = [];
+          
+          var swParams={
+            pagination: '.swiper-pagination',
+            paginationClickable: true,
+            loop: true,
+            onClick: function(s,e){
+              s.stopAutoplay();
+              app.stopAutoplayMenu = true;
+            },
+            onTap: function(s,e){
+              s.stopAutoplay();
+              app.stopAutoplayMenu = true;
+            },
+            onDoubleTap: function(s,e){
+              s.startAutoplay();
+              app.stopAutoplayMenu = false;
+              window.plugins.toast.show('Rotazione menu abilitata', 'short', 'bottom');
+            },
+            onSliderMove: function(s,e){
+              s.stopAutoplay();
+              app.stopAutoplayMenu = true;
+            },
+            onSlideChangeEnd: function(s){
+              var idx=s.activeIndex;
+              if(idx==0)idx=4;
+              if(idx==5)idx=1;
+              app.menuIndexSelected=idx;
+              $('#menu_ana').hide();
+              $('#menu_sta').hide();
+              $('#menu_mon').hide();
+              $('#menu_app').hide();
+              switch(idx){
+                case 1:  $('#menu_ana').slideDown('fast'); break;
+                case 2:  $('#menu_sta').slideDown('fast'); break;
+                case 3:  $('#menu_mon').slideDown('fast'); break;
+                case 4:  $('#menu_app').slideDown('fast'); break;
+                default: $('#menu_ana').slideDown('fast'); break;
+              }
+              s.update();
+            }
+          };
+          if(!app.stopAutoplayMenu) {
+            swParams.autoplay = 3000;
+            swParams.autoplayDisableOnInteraction = false;
+          }
+          if(app.stopAutoplayMenu && app.menuIndexSelected) {
+            swParams.initialSlide = app.menuIndexSelected - 1;
+          }
+          
+          var prevSwiper = $('.swiper-container')[0].swiper;
+          if(prevSwiper) prevSwiper.destroy();
+          
+          var swiper=new Swiper('.swiper-container',swParams);
+        });
+        $(document).off('pagehide','#jqm-menu').on('pagehide','#jqm-menu',function(){
+          app.exitOnBackKeyDown = false;
+          app.pageOnBackKeyDown = null;
+          app.stopAutoplayMenu  = true;
+        });
+      </script>
+    </div>
+  </body>
+</html>

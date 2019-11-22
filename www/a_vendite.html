@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-page-av">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false">
+        <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
+        <h1>Indici di vendita</h1>
+        <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
+      </div>
+      <div data-role="main" class="ui-content">
+        <form action="javascript:void(0);">
+          <div class="ui-field-contain">
+            <label for="f">Seller:</label>
+            <select id="f" name="f"></select>
+          </div>
+        </form>
+        <div id="title1"></div>
+        <div id="chart1" style="text-align: center"></div>
+        <div id="notes1"></div>
+        
+        <div id="title2"></div>
+        <div id="chart2" style="text-align: center"></div>
+        <div id="notes2"></div>
+        
+        <div id="title3"></div>
+        <div id="chart3" style="text-align: center"></div>
+        <div id="notes3"></div>
+        
+        <div id="title4"></div>
+        <div id="chart4" style="text-align: center"></div>
+        <div id="notes4"></div>
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        var _title1 = $('#title1');
+        var _chart1 = $('#chart1');
+        var _notes1 = $('#notes1');
+        var _title2 = $('#title2');
+        var _chart2 = $('#chart2');
+        var _notes2 = $('#notes2');
+        var _title3 = $('#title3');
+        var _chart3 = $('#chart3');
+        var _notes3 = $('#notes3');
+        var _title4 = $('#title4');
+        var _chart4 = $('#chart4');
+        var _notes4 = $('#notes4');
+        
+        var _gauge1 = gauge('#chart1',{size:280,clipWidth:280,clipHeight:190,ringWidth:70,maxValue:200,transitionMs:4000});
+        var _gauge2 = gauge('#chart2',{size:280,clipWidth:280,clipHeight:190,ringWidth:70,maxValue:200,transitionMs:4000});
+        var _gauge3 = gauge('#chart3',{size:280,clipWidth:280,clipHeight:190,ringWidth:70,maxValue:200,transitionMs:4000});
+        var _gauge4 = gauge('#chart4',{size:280,clipWidth:280,clipHeight:190,ringWidth:70,maxValue:200,transitionMs:4000});
+        
+        $(document).off('pageshow','#jqm-page-av').on('pageshow','#jqm-page-av',function(){
+          app.log('[a_vendite] pageshow...');
+          
+          _title1.empty();
+          _chart1.empty();
+          _notes1.empty();
+          _title2.empty();
+          _chart2.empty();
+          _notes2.empty();
+          _title3.empty();
+          _chart3.empty();
+          _notes3.empty();
+          _title4.empty();
+          _chart4.empty();
+          _notes4.empty();
+          
+          _gauge1.render();
+          _gauge2.render();
+          _gauge3.render();
+          _gauge4.render();
+          
+          appcache.buildOptionsSellers($('#f'), updateView);
+        });
+        
+        function updateView(){
+          var idf = $('#f').val();
+          app.log('[a_vendite] updateView idf=' + idf);
+          if(!idf) return;
+          
+          jrpc.test("CRUSCOTTO.rapportiVendita",[{"fs2":"14/11/2019","fs1":"21/11/2019","is1":"15/11/2019","dgi":0.63301939957745,"is2":"08/11/2019","fm2":"21/10/2019","fm1":"21/11/2019","im1":"22/10/2019","gi1":"21/11/2019","im2":"21/09/2019","gi2":"14/11/2019","peg":"-36,70","vs2":"17.089,61","vs1":"20.860,60","pem":"+4,50","vm2":"81.593,53","vm1":"85.268,06","pet":"-6,74","pes":"+22,07","vg2":"4.207,60","vg1":"2.663,49","ft1":"21/11/2019","dtr":0.9325570436626619,"ft2":"21/08/2019","it2":"21/05/2019","it1":"22/08/2019","vt1":"219.555,24","vt2":"235.433,58","dse":1.2206598618782047,"dme":1.0450345900340292}],function(r){
+            _title1.html('<strong>Rapporto giornaliero</strong>');
+            _gauge1.update(r.dgi * 100);
+            _notes1.html('Venduto lordo '+r.gi1+': <b>'+r.vg1+' &euro;</b><br>Venduto lordo '+r.gi2+': <b>'+r.vg2+' &euro;</b>');
+            
+            _title2.html('<strong>Rapporto settimanale</strong>');
+            _gauge2.update(r.dse * 100);
+            _notes2.html('Venduto dal '+r.is1+' al '+r.fs1+': <b>'+r.vs1+ ' &euro;</b><br>Venduto dal '+r.is2+' al '+r.fs2+': <b>'+r.vs2+' &euro;</b>');
+            
+            _title3.html('<strong>Rapporto mensile</strong>');
+            _gauge3.update(r.dme * 100);
+            _notes3.html('Venduto dal '+r.im1+' al '+r.fm1+': <b>'+r.vm1+' &euro;</b><br>Venduto dal '+r.im2+' al '+r.fm2+': <b>'+r.vm2+' &euro;</b>');
+            
+            _title4.html('<strong>Rapporto trimestrale</strong>');
+            _gauge4.update(r.dtr * 100);
+            _notes4.html('Venduto dal '+r.it1+' al '+r.ft1+': <b>'+r.vt1+' &euro;</b><br>Venduto dal '+r.it2+' al '+r.ft2+': <b>'+r.vt2+' &euro;</b>');
+          },app.onRpcError);
+        }
+      </script>
+    </div>
+  </body>
+</html>

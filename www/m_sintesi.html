@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-page-msi">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false">
+        <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
+        <h1>Sintesi Vendite</h1>
+        <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
+      </div>
+      <div data-role="main" class="ui-content">
+        <form action="javascript:void(0);">
+          <div class="ui-field-contain">
+            <label for="f">Seller:</label>
+            <select id="f" name="f"></select>
+          </div>
+          <div class="ui-field-contain">
+            <label for="pd">Data:</label>
+            <input data-role="date" type="text" id="pd" name="pd" readonly>
+          </div>
+        </form>
+        <br>
+        <table data-role="table" data-mode="columntoggle" id="tdata" class="ui-responsive table-stripe">
+          <thead>
+            <tr>
+              <th data-priority="persist">Voce</th>
+              <th data-priority="persist">Valore</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        $.datepicker.setDefaults($.datepicker.regional['it']);
+        if(_dateOnSelect)_dateOnSelect['pd']=updateView;
+        
+        var _fldate = $('#pd');
+        var d = new Date();
+        d.setDate(d.getDate()-1);
+        _fldate.val($.datepicker.formatDate('dd/mm/yy',d));
+        
+        var _lastfilter = '';
+        
+        var _table  = $('#tdata');
+        var _tbody  = $('#tdata tbody');
+        
+        $(document).off('pageshow','#jqm-page-msi').on('pageshow','#jqm-page-msi',function(){
+          app.log('[m_sintesi] pageshow...');
+          
+          _tbody.empty();
+          _table.table();
+          
+          appcache.buildOptionsSellers($('#f'), updateView);
+        });
+        
+        function updateView(){
+          var idf   = $('#f').val();
+          var fdate = _fldate.val();
+          app.log('[m_sintesi] updateView idf=' + idf + ',fdate=' + fdate);
+          if(!idf) return;
+          var filter=idf+'|'+fdate;
+          if(_lastfilter==filter)return;
+          _lastfilter=filter;
+          
+          jrpc.test("MOBILE.getSintesiVendite",[[["Numero clienti","105"],["Venduto lordo","2.663,49 &euro;"],["Venduto netto","2.610,88 &euro;"],["Scontrini emessi","92"],["Totale prodotti","251"],["Importo cassa","1.843,39 &euro;"],["Margine","878,88 &euro;"],["Ultima vendita","21/11/2019 19:02:05"]]],function(r){
+            _tbody.empty();
+            if(r.length > 0) {
+              for(var i=0; i < r.length; i++) {
+                _tbody.append('<tr><td>' + r[i][0] + '</td><td style="text-align:right;">' + r[i][1] + '</td></tr>');
+              }
+            }
+            else {
+              window.plugins.toast.showWithOptions({
+                message: "Dati non disponibili",duration:"short",position:"bottom",styling:{backgroundColor:'#bb0000'}
+              });
+            }
+            _table.table();
+          },app.onRpcError);
+        }
+      </script>
+    </div>
+  </body>
+</html>

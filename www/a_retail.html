@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-page-ar">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false">
+        <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
+        <h1>Retail performance</h1>
+        <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
+      </div>
+      <div data-role="main" class="ui-content">
+        <form action="javascript:void(0);">
+          <div class="ui-field-contain">
+            <label for="f">Seller:</label>
+            <select id="f" name="f"></select>
+          </div>
+          <div class="ui-field-contain">
+            <label for="unm">Periodo:</label>
+            <select id="unm" name="unm">
+              <option value="1" selected="selected">Ultimo mese</option>
+              <option value="2">Ultimi 2 mesi</option>
+              <option value="3">Ultimi 3 mesi</option>
+              <option value="6">Ultimi 6 mesi</option>
+              <option value="9">Ultimi 9 mesi</option>
+              <option value="12">Ultimo anno</option>
+            </select>
+          </div>
+        </form>
+        <div style="width: 600px; height: 300px;"><canvas id="chart1" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas></div>
+        <table data-role="table" data-mode="columntoggle" id="tdata" class="ui-responsive table-stripe">
+          <thead>
+            <tr>
+              <th data-priority="persist">Settore Inv.</th>
+              <th data-priority="persist" style="text-align:right;">Venduto (&euro;)</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        <div style="margin-top: 10px"><img alt="info" src="img/info.png"> <em>Indice basato su crescita giornaliera</em></div>
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        var _selper = $('#unm');
+        _selper.off().on('change',function(e){updateView();});
+        
+        var _lastfilter = '';
+        
+        var _chart1 = $('#chart1');
+        var _table  = $('#tdata');
+        var _tbody  = $('#tdata tbody');
+        
+        $(document).off('pageshow','#jqm-page-ar').on('pageshow','#jqm-page-ar',function(){
+          app.log('[a_retail] pageshow...');
+          
+          _chart1.empty();
+          _tbody.empty();
+          _table.table();
+          
+          appcache.buildOptionsSellers($('#f'), updateView);
+        });
+        
+        function updateView(){
+          var idf = $('#f').val();
+          var unm = _selper.val();
+          app.log('[a_retail] updateView idf=' + idf + ',unm=' + unm);
+          if(!idf) return;
+          var filter=idf+'|'+unm;
+          if(_lastfilter==filter)return;
+          _lastfilter=filter;
+          
+          jrpc.test("CRUSCOTTO.getRetailPerformace",[{"series":[[85,71,100,85,50,100,50,85],[64.64524656833838,11.686366114381466,13.945267520828969,7.228207155460812,0.13301845645838156,0.6558001377890994,0.5951477763980424,1.1109462703448318]],"values":[57395.07000000001,10375.7018,12381.26,6417.539999999999,118.10000000000002,582.2499999999999,528.4,986.35],"days":174,"labels":["Retail 1","Retail 2","Retail 3","Retail 4","Retail 5","Retail 6","Retail 7","Retail 8"]}],function(r){
+            var chartData = {
+                labels: r.labels,
+                datasets: [
+                  {
+                    label: "Indice",
+                    backgroundColor: "rgba(26,179,148,0.2)",
+                    borderColor: "rgba(26,179,148,1)",
+                    data: r.series[0]
+                  },
+                  {
+                    label: "Volume",
+                    backgroundColor: "rgba(220,220,220,0.2)",
+                    borderColor: "rgba(220,220,220,1)",
+                    data: r.series[1]
+                  }
+                ]
+            };
+            var chartOptions = {responsive: true};
+            var ctx = _chart1[0].getContext('2d');
+            new Chart(ctx, {type: 'radar', data: chartData, options: chartOptions});
+            
+            var labels=r.labels;
+            var values=r.values;
+            _tbody.empty();
+            for(var i=0; i < labels.length; i++) {
+              _tbody.append('<tr><td>' + labels[i] + '</td><td style="text-align:right;">' + values[i].toLocaleString() + '</td></tr>');
+            }
+            _table.table();
+            enableTablesorter(_table);
+          },app.onRpcError);
+        }
+      </script>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-page-mm">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false">
+        <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
+        <h1>Mappa sellers</h1>
+        <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
+      </div>
+      <div role="main" class="ui-content" id="map-canvas">
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        $(document).off('pageshow','#jqm-page-mm').on('pageshow','#jqm-page-mm',function(){
+          jrpc.test("SELLERS.find",[[{"c":"S1","lng":12.603795,"d":"Seller 1","tpc":"S001","i":17,"lat":41.933734},{"c":"S2","lng":12.613571,"d":"Seller 2","tpc":"S002","i":18,"lat":41.935902},{"c":"S3","lng":12.618334,"d":"Seller 3","tpc":"S0010254","i":19,"lat":41.937866}]],function(result){
+            var arrayOfPoints=[];
+            var arrayOfTitles=[];
+            
+            for(var i=0; i<result.length; i++) {
+              var item=result[i];
+              if(item.lat>=-1 && item.lat<=1) continue;
+              var latlng=new google.maps.LatLng(item.lat,item.lng);
+              arrayOfPoints.push(latlng);
+              arrayOfTitles.push(item.d);
+            }
+            
+            _drawMap(arrayOfPoints, arrayOfTitles);
+          },app.onRpcError);
+        });
+        
+        function _drawMap(arrayOfPoints, arrayOfTitles){
+          if(arrayOfPoints===undefined || arrayOfPoints===null && arrayOfPoints.length==0) return;
+          var opt = {zoom:10, center:arrayOfPoints[0], mapTypeId:google.maps.MapTypeId.ROADMAP};
+          var map = new google.maps.Map(document.getElementById("map-canvas"), opt);
+          for(var i=0; i < arrayOfPoints.length; i++) {
+            var t = arrayOfTitles[i];
+            var m = new google.maps.Marker({position: arrayOfPoints[i], map: map, title: t});
+            var w = new google.maps.InfoWindow();
+            google.maps.event.addListener(m,'click',(function(m, t, w){
+              return function(){ w.setContent(t); w.open(map, m); };
+            })(m, t, w));
+          }
+        }
+      </script>
+    </div>
+  </body>
+</html>

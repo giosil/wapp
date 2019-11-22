@@ -1,0 +1,25 @@
+{
+    "name": "org.dew.wapp",
+    "version": "1.0.0",
+    "displayName": "WApp",
+    "cordova": {
+        "platforms": [
+            "android"
+        ],
+        "plugins": {
+            "cordova-plugin-whitelist": {},
+            "cordova-plugin-x-toast": {},
+            "phonegap-plugin-barcodescanner": {},
+            "cordova.plugins.diagnostic": {},
+            "onesignal-cordova-plugin": {}
+        }
+    },
+    "dependencies": {
+        "cordova-android": "^6.4.0",
+        "cordova-plugin-whitelist": "^1.3.4",
+        "cordova-plugin-x-toast": "^2.6.2",
+        "cordova.plugins.diagnostic": "^3.9.2",
+        "onesignal-cordova-plugin": "^2.7.0",
+        "phonegap-plugin-barcodescanner": "git+https://github.com/wildabeast/BarcodeScanner.git"
+    }
+}

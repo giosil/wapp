@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-page-avg">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false">
+        <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
+        <h1>Vendite giornalierie</h1>
+        <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
+      </div>
+      <div data-role="main" class="ui-content">
+        <form action="javascript:void(0);">
+          <div class="ui-field-contain">
+            <label for="f">Seller:</label>
+            <select id="f" name="f"></select>
+          </div>
+        </form>
+        <div class="swiper-container">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <div style="width: 360px; height: 200px;">
+                <canvas id="chart1" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div style="width: 360px; height: 200px;">
+                <canvas id="chart2" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div style="width: 360px; height: 200px;">
+                <canvas id="chart3" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+        <table data-role="table" data-mode="columntoggle" id="tdata" class="ui-responsive table-stripe">
+          <thead>
+            <tr>
+              <th data-priority="persist">Data</th>
+              <th data-priority="persist" style="text-align:right;">Venduto (&euro;)</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        <div style="margin-top: 10px"><img alt="info" src="img/info.png"> <em>Interrogazione basata su ultimo mese</em></div>
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        var _chart1 = $('#chart1');
+        var _chart2 = $('#chart2');
+        var _chart3 = $('#chart3');
+        var _table  = $('#tdata');
+        var _tbody  = $('#tdata tbody');
+        
+        var _vendite=null;
+        
+        $(document).off('pageshow','#jqm-page-avg').on('pageshow','#jqm-page-avg',function(){
+          app.log('[a_venduto_gio] pageshow...');
+          
+          _chart1.empty();
+          _chart2.empty();
+          _chart3.empty();
+          
+          _tbody.empty();
+          _table.table();
+          
+          appcache.buildOptionsSellers($('#f'), updateView);
+          
+          var swParams={
+            pagination: '.swiper-pagination',
+            paginationClickable: true,
+            onSlideChangeEnd: function(s){
+              updateTable(s.activeIndex);
+            }
+          };
+          
+          var prevSwiper = $('.swiper-container')[0].swiper;
+          if(prevSwiper) prevSwiper.destroy();
+          
+          var swiper=new Swiper('.swiper-container',swParams);
+        });
+        
+        function updateView(){
+          var idf = $('#f').val();
+          app.log('[a_venduto_gio] updateView idf=' + idf);
+          if(!idf) return;
+          
+          jrpc.test("MOBILE.getVendite",[{"series3":[[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4360.594,4521.32,0.0,2931.588,3567.0736,2421.54,0.0,3702.5212,3690.24,3671.386,3081.916,3571.5132,0.0,0.0,3578.8436,3089.458,0.0,3380.9108,4143.303]],"descs":["2019-10-21 Lu","2019-10-22 Ma","2019-10-23 Me","2019-10-24 Gi","2019-10-25 Ve","2019-10-26 Sa","2019-10-27 Do","2019-10-28 Lu","2019-10-29 Ma","2019-10-30 Me","2019-10-31 Gi","2019-11-01 Ve","2019-11-02 Sa","2019-11-03 Do","2019-11-04 Lu","2019-11-05 Ma","2019-11-06 Me","2019-11-07 Gi","2019-11-08 Ve","2019-11-09 Sa","2019-11-10 Do","2019-11-11 Lu","2019-11-12 Ma","2019-11-13 Me","2019-11-14 Gi","2019-11-15 Ve","2019-11-16 Sa","2019-11-17 Do","2019-11-18 Lu","2019-11-19 Ma","2019-11-20 Me","2019-11-21 Gi"],"series":[[3516.61,2915.8244,3632.166,2757.41,4635.5764,0.0,3559.29,3448.0974,3029.6388,0.0,5143.2756,0.0,3031.12,0.0,2332.36,5158.6076,4103.21,3571.2684,4258.946,0.0,0.0,4578.384,4044.686,0.0,4207.5968,4610.5368,3066.3024,0.0,3314.9104,3589.5064,3615.858,2663.4904]],"series2":[[2981.44,0.0,3537.5942,4069.238,3393.9608,3134.746,5215.0856,0.0,0.0,4997.8716,3666.486,0.0,5230.8776,3915.876,2884.5364,0.0,3622.68,3871.5108,4590.2136,3325.33,3695.18,0.0,0.0,3506.6784,3731.7184,0.0,4734.2336,4521.0436,2432.06,0.0]],"labels2":["Sa21/09","Do22/09","Lu23/09","Ma24/09","Me25/09","Gi26/09","Ve27/09","Sa28/09","Do29/09","Lu30/09","Ma01/10","Me02/10","Gi03/10","Ve04/10","Sa05/10","Do06/10","Lu07/10","Ma08/10","Me09/10","Gi10/10","Ve11/10","Sa12/10","Do13/10","Lu14/10","Ma15/10","Me16/10","Gi17/10","Ve18/10","Sa19/10","Do20/10"],"descs3":["2019-08-21 Me","2019-08-22 Gi","2019-08-23 Ve","2019-08-24 Sa","2019-08-25 Do","2019-08-26 Lu","2019-08-27 Ma","2019-08-28 Me","2019-08-29 Gi","2019-08-30 Ve","2019-08-31 Sa","2019-09-01 Do","2019-09-02 Lu","2019-09-03 Ma","2019-09-04 Me","2019-09-05 Gi","2019-09-06 Ve","2019-09-07 Sa","2019-09-08 Do","2019-09-09 Lu","2019-09-10 Ma","2019-09-11 Me","2019-09-12 Gi","2019-09-13 Ve","2019-09-14 Sa","2019-09-15 Do","2019-09-16 Lu","2019-09-17 Ma","2019-09-18 Me","2019-09-19 Gi","2019-09-20 Ve"],"descs2":["2019-09-21 Sa","2019-09-22 Do","2019-09-23 Lu","2019-09-24 Ma","2019-09-25 Me","2019-09-26 Gi","2019-09-27 Ve","2019-09-28 Sa","2019-09-29 Do","2019-09-30 Lu","2019-10-01 Ma","2019-10-02 Me","2019-10-03 Gi","2019-10-04 Ve","2019-10-05 Sa","2019-10-06 Do","2019-10-07 Lu","2019-10-08 Ma","2019-10-09 Me","2019-10-10 Gi","2019-10-11 Ve","2019-10-12 Sa","2019-10-13 Do","2019-10-14 Lu","2019-10-15 Ma","2019-10-16 Me","2019-10-17 Gi","2019-10-18 Ve","2019-10-19 Sa","2019-10-20 Do"],"labels":["Lu21/10","Ma22/10","Me23/10","Gi24/10","Ve25/10","Sa26/10","Do27/10","Lu28/10","Ma29/10","Me30/10","Gi31/10","Ve01/11","Sa02/11","Do03/11","Lu04/11","Ma05/11","Me06/11","Gi07/11","Ve08/11","Sa09/11","Do10/11","Lu11/11","Ma12/11","Me13/11","Gi14/11","Ve15/11","Sa16/11","Do17/11","Lu18/11","Ma19/11","Me20/11","Gi21/11"],"labels3":["Me21/08","Gi22/08","Ve23/08","Sa24/08","Do25/08","Lu26/08","Ma27/08","Me28/08","Gi29/08","Ve30/08","Sa31/08","Do01/09","Lu02/09","Ma03/09","Me04/09","Gi05/09","Ve06/09","Sa07/09","Do08/09","Lu09/09","Ma10/09","Me11/09","Gi12/09","Ve13/09","Sa14/09","Do15/09","Lu16/09","Ma17/09","Me18/09","Gi19/09","Ve20/09"]}],function(r){
+            _vendite=r;
+            var chartData1 = {
+                labels: r.labels,
+                datasets: [
+                  {
+                    label: "Venduto",
+                    backgroundColor: 'rgba(26,179,148,0.5)',
+                    borderColor: "rgba(26,179,148,0.7)",
+                    pointBackgroundColor: "rgba(26,179,148,1)",
+                    pointBorderColor: "#fff",
+                    data: r.series[0]
+                  }
+                ]
+            };
+            var chartData2 = {
+                labels: r.labels2,
+                datasets: [
+                  {
+                    label: "Venduto",
+                    backgroundColor: 'rgba(26,179,148,0.5)',
+                    borderColor: "rgba(26,179,148,0.7)",
+                    pointBackgroundColor: "rgba(26,179,148,1)",
+                    pointBorderColor: "#fff",
+                    data: r.series2[0]
+                  }
+                ]
+            };
+            var chartData3 = {
+                labels: r.labels3,
+                datasets: [
+                  {
+                    label: "Venduto",
+                    backgroundColor: 'rgba(26,179,148,0.5)',
+                    borderColor: "rgba(26,179,148,0.7)",
+                    pointBackgroundColor: "rgba(26,179,148,1)",
+                    pointBorderColor: "#fff",
+                    data: r.series3[0]
+                  }
+                ]
+            };
+            var chartOptions = {responsive: true, legend: {display: false}};
+            var ctx1 = _chart1[0].getContext('2d');
+            new Chart(ctx1, {type: 'line', data: chartData1, options: chartOptions});
+            var ctx2 = _chart2[0].getContext('2d');
+            new Chart(ctx2, {type: 'line', data: chartData2, options: chartOptions});
+            var ctx3 = _chart3[0].getContext('2d');
+            new Chart(ctx3, {type: 'line', data: chartData3, options: chartOptions});
+            
+            updateTable(0);
+          },app.onRpcError);
+        }
+        
+        function updateTable(idx){
+          if(_vendite===undefined || _vendite===null)return;
+          var labels=_vendite.descs;
+          var values=_vendite.series[0];
+          if(idx==1){
+            labels=_vendite.descs2;
+            values=_vendite.series2[0];
+          }
+          if(idx==2){
+            labels=_vendite.descs3;
+            values=_vendite.series3[0];
+          }
+          _tbody.empty();
+          for(var i=0; i < labels.length; i++) {
+            if(labels[i].indexOf('Do') >= 0) {
+              _tbody.append('<tr><td><span style="color:#cc0000;">' + labels[i] + '</span></td><td style="text-align:right;"><span style="color:#cc0000;">' + values[i] + '</span></td></tr>');
+            }
+            else {
+              _tbody.append('<tr><td>' + labels[i] + '</td><td style="text-align:right;">' + values[i] + '</td></tr>');
+            }
+          }
+          _table.table();
+          enableTablesorter(_table,{headers:{0:{sorter:"text"}}});
+        }
+      </script>
+    </div>
+  </body>
+</html>

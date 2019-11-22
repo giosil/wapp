@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script>
+      $(document).bind("mobileinit",function(){
+        $.mobile.page.prototype.options.domCache = false;
+        $.mobile.defaultPageTransition = 'slidefade';
+        $.mobile.page.prototype.options.degradeInputs.date = true;
+      });
+    </script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-home">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false"> 
+        <h1>App mobile</h1>
+      </div>
+      <div data-role="main" class="ui-content">
+        <form name="frmLogin" id="frmLogin" action="javascript:void(0);">
+          <div class="ui-field-contain">
+            <label for="j_username">UserName:</label>
+            <input type="text" name="j_username" id="j_username" value="">
+          </div>
+          <div class="ui-field-contain">
+            <label for="j_password">Password:</label>
+            <input type="password" name="j_password" id="j_password" value="" autocomplete="off">
+          </div>
+          <div class="ui-field-contain">
+            <label for="iremeber">Ricorda credenziali</label>
+            <input type="checkbox" name="iremeber" id="iremeber">
+          </div>
+          <p id="msg" style="text-align: center;color: #bb0000;font-weight: bold;"></p>
+          <fieldset class="ui-grid-a">
+            <div class="ui-block-a"><input type="button" value="Accedi" data-theme="b" id="btnILogin"></div>
+            <div class="ui-block-b"><input type="reset" value="Annulla" data-theme="a" id="btnIReset"></div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+    <script>
+      $(document).off('pagecreate','#jqm-home').on('pagecreate','#jqm-home',function(){
+        app.initialize();
+        
+        jrpc.setUserName("");
+        jrpc.setPassword("");
+        
+        if(localStorage.getItem('j_username')) {
+          $('#j_username').val(localStorage.getItem('j_username'));
+          $('#j_password').val(localStorage.getItem('j_password'));
+          $('#iremeber').prop('checked', true).checkboxradio('refresh');
+        }
+        $('#iremeber').off().on('click', function(e) {
+          if(!$('#iremeber').is(':checked')) {
+            app.log('[index] localStorage.clear()');
+            localStorage.clear();
+          }
+        });
+        
+        $('#btnILogin').off().on('click', function(e) {
+          login(null);
+        });
+      });
+    </script>
+  </body>
+</html>

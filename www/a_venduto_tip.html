@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-page-avt">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false">
+        <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
+        <h1>Vendite per tipologia</h1>
+        <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
+      </div>
+      <div data-role="main" class="ui-content">
+        <form action="javascript:void(0);">
+          <div class="ui-field-contain">
+            <label for="f">Seller:</label>
+            <select id="f" name="f"></select>
+          </div>
+          <div class="ui-field-contain">
+            <label for="unm">Periodo:</label>
+            <select id="unm" name="unm">
+              <option value="1" selected="selected">Ultimo mese</option>
+              <option value="2">Ultimi 2 mesi</option>
+              <option value="3">Ultimi 3 mesi</option>
+              <option value="6">Ultimi 6 mesi</option>
+              <option value="9">Ultimi 9 mesi</option>
+              <option value="12">Ultimo anno</option>
+            </select>
+          </div>
+        </form>
+        <div style="width: 600px; height: 300px;"><canvas id="chart1" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas></div>
+        <table data-role="table" data-mode="columntoggle" id="tdata" class="ui-responsive table-stripe">
+          <thead>
+            <tr>
+              <th data-priority="persist">Tipo</th>
+              <th data-priority="persist" style="text-align:right;">Venduto (&euro;)</th>
+              <th data-priority="persist" style="text-align:right;">%</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        var _selper = $('#unm');
+        _selper.off().on('change',function(e){updateView();});
+        
+        var _lastfilter = '';
+        
+        var _chart1 = $('#chart1');
+        var _table  = $('#tdata');
+        var _tbody  = $('#tdata tbody');
+        
+        $(document).off('pageshow','#jqm-page-avt').on('pageshow','#jqm-page-avt',function(){
+          app.log('[a_venduto_tip] pageshow...');
+          
+          _chart1.empty();
+          
+          _tbody.empty();
+          _table.table();
+          
+          appcache.buildOptionsSellers($('#f'), updateView);
+        });
+        
+        function updateView(){
+          var idf = $('#f').val();
+          var unm = _selper.val();
+          app.log('[a_venduto_tip] updateView idf=' + idf + ',unm=' + unm);
+          if(!idf) return;
+          var filter=idf+'|'+unm;
+          if(_lastfilter==filter)return;
+          _lastfilter=filter;
+          
+          jrpc.test("MOBILE.getVenditePerTipo",[{"perc":["37,13","57,05","5,83"],"series":[[32965.16,50647.67,5171.84]],"values":["32.965,16","50.647,67","5.171,84"],"labels":["Tipo 1","Tipo 2","-"]}],function(r){
+            var chartData = {
+              labels: r.labels,
+              datasets: [
+                {
+                  data: r.series[0],
+                  backgroundColor: [
+                    "#dfefdf","#e4f4ff","#ffffcc","#ffddaa","#ffccff","#e6ccff","#f1e7cb","#eeeeee","#d9f2e6","#d9e6f2"
+                  ],
+                }
+              ]
+            };
+            var chartOptions = {responsive: true, maintainAspectRatio: false, legend: {display: false}, pieceLabel: {mode: 'label', fontColor: '#000'}};
+            var ctx = _chart1[0].getContext('2d');
+            new Chart(ctx, {type: 'pie', data: chartData, options: chartOptions});
+            
+            var labels=r.labels;
+            var values=r.values;
+            var perc=r.perc;
+            
+            _tbody.empty();
+            for(var i=0; i < labels.length; i++) {
+              _tbody.append('<tr><td>' + labels[i] + '</td><td style="text-align:right;">' + values[i] + '</td><td style="text-align:right;">' + perc[i] + '</td></tr>');
+            }
+            _table.table();
+            enableTablesorter(_table);
+          },app.onRpcError);
+        }
+      </script>
+    </div>
+  </body>
+</html>

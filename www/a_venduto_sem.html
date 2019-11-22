@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    
+    <title>WApp Mobile</title>
+    
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+    <link rel="stylesheet" href="css/jquery.ui.datepicker.custom.css" />
+    <link rel="stylesheet" href="css/jquery.mobile.datepicker.css" />
+    <link rel="stylesheet" href="css/chartist.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.messages_it.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.datepicker.it.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.datepicker.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/swiper.min.js"></script>
+    <script type="text/javascript" src="js/chartist.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/Chart.min.js"></script>
+    <script type="text/javascript" src="js/Chart.PieceLabel.js"></script>
+    <script type="text/javascript" src="js/gauge.js"></script>
+    <script type="text/javascript" src="js/jrpc.js"></script>
+    <script type="text/javascript" src="js/apputils.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCXkNE5M7upTaogaUAarus_cONsusWM1nM&sensor=false"></script>
+    
+    <script type="text/javascript" src="js/_cordova.js"></script>
+    <script type="text/javascript" src="js/Toast.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="jqm-page-avs">
+      <div data-role="header" data-position="fixed" data-tap-toggle="false">
+        <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
+        <h1>Andamento semestrale</h1>
+        <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
+      </div>
+      <div data-role="main" class="ui-content">
+        <form action="javascript:void(0);">
+          <div class="ui-field-contain">
+            <label for="f">Seller:</label>
+            <select id="f" name="f"></select>
+          </div>
+        </form>
+        <div class="swiper-container">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <div style="width: 360px; height: 200px;">
+                <canvas id="chart1" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div style="width: 360px; height: 200px;">
+                <canvas id="chart2" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+        <table data-role="table" data-mode="columntoggle" id="tdata" class="ui-responsive table-stripe">
+          <thead>
+            <tr>
+              <th data-priority="persist">Mese</th>
+              <th data-priority="persist" style="text-align:right;">Venduto (&euro;)</th>
+              <th data-priority="persist" style="text-align:right;">Margine (&euro;)</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div class="toastmsg" style="display: none;"></div>
+      <script>
+        if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
+        
+        var _chart1 = $('#chart1');
+        var _chart2 = $('#chart2');
+        var _table  = $('#tdata');
+        var _tbody  = $('#tdata tbody');
+        
+        var _vendite=null;
+        
+        $(document).off('pageshow','#jqm-page-avs').on('pageshow','#jqm-page-avs',function(){
+          app.log('[a_venduto_men] pageshow...');
+          
+          _chart1.empty();
+          _chart2.empty();
+          
+          _tbody.empty();
+          _table.table();
+          
+          appcache.buildOptionsSellers($('#f'), updateView);
+          
+          var swParams={
+            pagination: '.swiper-pagination',
+            paginationClickable: true,
+            onSlideChangeEnd: function(s){
+              updateTable(s.activeIndex);
+            }
+          };
+          
+          var prevSwiper = $('.swiper-container')[0].swiper;
+          if(prevSwiper) prevSwiper.destroy();
+          
+          var swiper=new Swiper('.swiper-container',swParams);
+        });
+        
+        function updateView(){
+          var idf = $('#f').val();
+          app.log('[a_venduto_men] updateView idf=' + idf);
+          if(!idf) return;
+          
+          jrpc.test("MOBILE.getVenditeMensili",[{"descs":["2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11"],"series":[[93730.82,82406.46,91695.5,31275.87,77042.14,86366.31,56146.78],[27950.13,25800.08,28904.26,9877.18,24058.5,27429.96,17943.91]],"series2":[[89467.82,87448.95,93623.3,83538.67,82598.53,74263.56],[27102.35,26437.37,29708.69,27117.01,26365.23,23376.86]],"labels2":["2018-11","2018-12","2019-01","2019-02","2019-03","2019-04"],"descs2":["2018-11","2018-12","2019-01","2019-02","2019-03","2019-04"],"labels":["2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11"]}],function(r){
+            _vendite=r;
+            var chartData1 = {
+                labels: r.labels,
+                datasets: [
+                  {
+                    label: "Venduto",
+                    backgroundColor: 'rgba(26,179,148,0.5)',
+                    borderColor: "rgba(26,179,148,0.7)",
+                    pointBackgroundColor: "rgba(26,179,148,1)",
+                    pointBorderColor: "#fff",
+                    data: r.series[0]
+                  },{
+                    label: "Margine",
+                    backgroundColor: 'rgba(220, 220, 220, 0.5)',
+                    pointBorderColor: "#fff",
+                    data: r.series[1]
+                  }
+                ]
+            };
+            var chartData2 = {
+                labels: r.labels2,
+                datasets: [
+                  {
+                    label: "Venduto",
+                    backgroundColor: 'rgba(26,179,148,0.5)',
+                    borderColor: "rgba(26,179,148,0.7)",
+                    pointBackgroundColor: "rgba(26,179,148,1)",
+                    pointBorderColor: "#fff",
+                    data: r.series2[0]
+                  },{
+                    label: "Margine",
+                    backgroundColor: 'rgba(220, 220, 220, 0.5)',
+                    pointBorderColor: "#fff",
+                    data: r.series2[1]
+                  }
+                ]
+            };
+            var chartOptions = {responsive: true};
+            var ctx1 = _chart1[0].getContext('2d');
+            new Chart(ctx1, {type: 'line', data: chartData1, options: chartOptions});
+            var ctx2 = _chart2[0].getContext('2d');
+            new Chart(ctx2, {type: 'line', data: chartData2, options: chartOptions});
+            
+            updateTable(0);
+          },app.onRpcError);
+        }
+        
+        function updateTable(idx){
+          if(_vendite===undefined || _vendite===null)return;
+          var labels=_vendite.labels;
+          var serie0=_vendite.series[0];
+          var serie1=_vendite.series[1];
+          if(idx==1){
+            labels=_vendite.descs2;
+            serie0=_vendite.series2[0];
+            serie1=_vendite.series2[1];
+          }
+          _tbody.empty();
+          for(var i=0; i < labels.length; i++) {
+            _tbody.append('<tr><td><strong>' + labels[i] + '</strong></td><td style="text-align:right;">' + formatDouble(serie0[i]) + '</td><td style="text-align:right;">' + formatDouble(serie1[i]) + '</td></tr>');
+          }
+          _table.table();
+          enableTablesorter(_table);
+        }
+      </script>
+    </div>
+  </body>
+</html>
