@@ -8,6 +8,9 @@ A simple cordova app based on jQuery Mobile.
 - `npm install -g cordova`
 - `cordov add android`
 - `cordova build`
+
+## Run
+
 - `cordova run android --device`
 
 ![WApp](wapp.png)
