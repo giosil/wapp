@@ -53,7 +53,7 @@
         if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
         
         $(document).off('pageshow','#jqm-page-mm').on('pageshow','#jqm-page-mm',function(){
-          jrpc.test("SELLERS.find",[{}],function(result){
+          jrpc.execute("SELLERS.find",[{}],function(result){
             var arrayOfPoints=[];
             var arrayOfTitles=[];
             

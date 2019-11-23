@@ -24,10 +24,17 @@ A simple cordova hybrid mobile app based on jQuery Mobile.
 - `cordova plugin add https://github.com/katzer/cordova-plugin-local-notifications --save`
 - `cordova plugin add https://github.com/wildabeast/BarcodeScanner.git --save`
 - `cordova plugin add cordova.plugins.diagnostic --save`
+- `cordova plugin add cordova-custom-config --save`
 
 ## Run
 
 - `cordova run android --device`
+
+## Debug
+
+- `chrome://inspect` on Chrome URL bar
+
+![Chrome inspect](debug.png)
 
 ## Try it directly
 

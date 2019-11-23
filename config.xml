@@ -17,16 +17,22 @@
     <allow-intent href="geo:*" />
     <platform name="android">
         <allow-intent href="market:*" />
+        <custom-config-file target="AndroidManifest.xml" parent="/*" mode="merge" xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-feature android:name="android.hardware.camera.autofocus" />
+        </custom-config-file>
     </platform>
     <platform name="ios">
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
     </platform>
     <preference name="splashscreen" value="screen" />
+    <preference name="cordova.plugins.diagnostic.modules" value="CAMERA" />
     <icon src="www/img/logo.png" />
     <engine name="android" spec="^6.2.3" />
     <plugin name="cordova-plugin-whitelist" spec="1" />
     <plugin name="cordova-plugin-x-toast" spec="~2.6.0" />
+    <plugin name="cordova-custom-config" spec="^5.1.0" />
     <plugin name="cordova.plugins.diagnostic" spec="^3.6.5" />
     <plugin name="onesignal-cordova-plugin" spec="^2.2.0" />
     <plugin name="phonegap-plugin-barcodescanner" spec="git+https://github.com/wildabeast/BarcodeScanner.git" />

@@ -145,11 +145,14 @@ function checkCamera(succ){
             app.log('[apputils] diagnostic.requestCameraAuthorization -> ' + status);
             if(cordova.plugins.diagnostic.permissionStatus){
               app.log('[apputils] checkCamera callback 1...');
-              if(typeof succ=='function') succ(status == cordova.plugins.diagnostic.permissionStatus.GRANTED);
+              // dont work fine...
+              // if(typeof succ=='function') succ(status == cordova.plugins.diagnostic.permissionStatus.GRANTED);
+              // this work...
+              if(typeof succ=='function') succ(status != cordova.plugins.diagnostic.permissionStatus.DENIED);
             }
             else {
               app.log('[apputils] checkCamera callback 2...');
-              if(typeof succ=='function') succ(status);
+              if(typeof succ=='function') succ(false);
             }
           }
         );
@@ -165,10 +168,14 @@ function scanBarCode(c,f){
   app.log('[apputils] scanBarCode...');
   checkCamera(
     function(granted){
+      app.log('[apputils] scanBarCode granted=' + granted + '...');
       if(granted){
         var txt=c;
         if(typeof c=="string")txt=$(c);
-        if(txt===undefined||txt===null||txt.length==0)return;
+        if(txt===undefined||txt===null||txt.length==0){
+          app.log('[apputils] scanBarCode txt=' + txt + '...');
+          return;
+        }
         app.log('barcodeScanner.scan...');
         cordova.plugins.barcodeScanner.scan(
           function(result){

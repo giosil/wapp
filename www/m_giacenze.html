@@ -104,12 +104,8 @@
           
           var dpro = _txtpro.val();
           app.log('[m_giacenze] updateView dpro=' + dpro);
-          if(dpro=='') {
-            window.plugins.toast.showWithOptions({
-              message: "Specificare prodotto",duration:"short",position:"bottom",styling:{backgroundColor:'#bb0000'}
-            });
-            return;
-          }
+          if(dpro=='') return;
+          
           if(dpro=='###') {
             setTimeout(function(){
               app.log('[m_giacenze] changePage("x_log.html")...');
