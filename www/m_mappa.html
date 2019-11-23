@@ -53,7 +53,7 @@
         if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
         
         $(document).off('pageshow','#jqm-page-mm').on('pageshow','#jqm-page-mm',function(){
-          jrpc.test("SELLERS.find",[[{"c":"S1","lng":12.603795,"d":"Seller 1","tpc":"S001","i":17,"lat":41.933734},{"c":"S2","lng":12.613571,"d":"Seller 2","tpc":"S002","i":18,"lat":41.935902},{"c":"S3","lng":12.618334,"d":"Seller 3","tpc":"S0010254","i":19,"lat":41.937866}]],function(result){
+          jrpc.test("SELLERS.find",[{}],function(result){
             var arrayOfPoints=[];
             var arrayOfTitles=[];
             

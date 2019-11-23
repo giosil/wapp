@@ -110,7 +110,7 @@
           if(_lastfilter==filter)return;
           _lastfilter=filter;
           
-          jrpc.test("MOBILE.getVenditePerTipo",[{"perc":["37,13","57,05","5,83"],"series":[[32965.16,50647.67,5171.84]],"values":["32.965,16","50.647,67","5.171,84"],"labels":["Tipo 1","Tipo 2","-"]}],function(r){
+          jrpc.execute("MOBILE.getVenditePerTipo",[{"idf":idf,"unm":unm}],function(r){
             var chartData = {
               labels: r.labels,
               datasets: [

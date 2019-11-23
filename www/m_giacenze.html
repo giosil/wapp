@@ -5,7 +5,7 @@
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
     
-    <title>WApp Mobile</title>
+    <title>App Mobile</title>
     
     <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
     <link rel="stylesheet" href="css/jquery-ui.css" />
@@ -40,10 +40,10 @@
     <script type="text/javascript" src="js/index.js"></script>
   </head>
   <body>
-    <div data-role="page" id="jqm-page-ar">
+    <div data-role="page" id="jqm-page-mg">
       <div data-role="header" data-position="fixed" data-tap-toggle="false">
         <a href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-back ui-btn-icon-notext ui-btn-left" data-rel="back"></a>
-        <h1>Retail performance</h1>
+        <h1>Giacenze Magazzino</h1>
         <a href="menu.html" class="ui-btn ui-shadow ui-corner-all ui-icon-home ui-btn-icon-notext ui-btn-right">Home</a>
       </div>
       <div data-role="main" class="ui-content">
@@ -53,47 +53,44 @@
             <select id="f" name="f"></select>
           </div>
           <div class="ui-field-contain">
-            <label for="unm">Periodo:</label>
-            <select id="unm" name="unm">
-              <option value="1" selected="selected">Ultimo mese</option>
-              <option value="2">Ultimi 2 mesi</option>
-              <option value="3">Ultimi 3 mesi</option>
-              <option value="6">Ultimi 6 mesi</option>
-              <option value="9">Ultimi 9 mesi</option>
-              <option value="12">Ultimo anno</option>
-            </select>
+            <label for="p">Prodotto:</label>
+            <input type="text" name="p" id="p" placeholder="Primi tre caratteri (### log,!!! notifica di test)">
+            <a class="ui-icon-camera ui-btn-icon-right" id="btnScan" role="button"></a>
           </div>
+          <fieldset class="ui-grid-a">
+            <div class="ui-block-a"><input type="submit" value="Interroga" data-theme="b" id="btnExecute"></div>
+            <div class="ui-block-b"><input type="reset" value="Annulla" data-theme="a" id="btnReset"></div>
+          </fieldset>
         </form>
-        <div style="width: 600px; height: 300px;"><canvas id="chart1" style="position: absolute; left: 50%; transform: translateX(-50%)"></canvas></div>
+        <br>
         <table data-role="table" data-mode="columntoggle" id="tdata" class="ui-responsive table-stripe">
           <thead>
             <tr>
-              <th data-priority="persist">Settore Inv.</th>
-              <th data-priority="persist" style="text-align:right;">Venduto (&euro;)</th>
+              <th data-priority="persist">Prodotto</th>
+              <th data-priority="persist">Giacenza</th>
             </tr>
           </thead>
           <tbody>
           </tbody>
         </table>
-        <div style="margin-top: 10px"><img alt="info" src="img/info.png"> <em>Indice basato su crescita giornaliera</em></div>
       </div>
       <div class="toastmsg" style="display: none;"></div>
       <script>
         if(app.userLogged == null) {window.location.replace("index.jsp"); throw new Error("User not logged");}
         
-        var _selper = $('#unm');
-        _selper.off().on('change',function(e){updateView();});
-        
-        var _lastfilter = '';
-        
-        var _chart1 = $('#chart1');
+        var _txtpro = $('#p');
+        var _btnSca = $('#btnScan');
+        var _btnexe = $('#btnExecute');
         var _table  = $('#tdata');
         var _tbody  = $('#tdata tbody');
         
-        $(document).off('pageshow','#jqm-page-ar').on('pageshow','#jqm-page-ar',function(){
-          app.log('[a_retail] pageshow...');
+        _btnexe.off().on('click',function(e){updateView();});
+        _btnSca.off().on('click',function(e){scanBarCode(_txtpro,updateView);});
+        
+        $(document).off('pageshow','#jqm-page-mg').on('pageshow','#jqm-page-mg',function(){
+          app.log('[m_giacenze] pageshow...');
           
-          _chart1.empty();
+          _txtpro.val('');
           _tbody.empty();
           _table.table();
           
@@ -102,44 +99,47 @@
         
         function updateView(){
           var idf = $('#f').val();
-          var unm = _selper.val();
-          app.log('[a_retail] updateView idf=' + idf + ',unm=' + unm);
+          app.log('[m_giacenze] updateView idf=' + idf);
           if(!idf) return;
-          var filter=idf+'|'+unm;
-          if(_lastfilter==filter)return;
-          _lastfilter=filter;
           
-          jrpc.execute("CRUSCOTTO.getRetailPerformace",[{"idf":idf,"unm":unm}],function(r){
-            var chartData = {
-                labels: r.labels,
-                datasets: [
-                  {
-                    label: "Indice",
-                    backgroundColor: "rgba(26,179,148,0.2)",
-                    borderColor: "rgba(26,179,148,1)",
-                    data: r.series[0]
-                  },
-                  {
-                    label: "Volume",
-                    backgroundColor: "rgba(220,220,220,0.2)",
-                    borderColor: "rgba(220,220,220,1)",
-                    data: r.series[1]
-                  }
-                ]
-            };
-            var chartOptions = {responsive: true};
-            var ctx = _chart1[0].getContext('2d');
-            new Chart(ctx, {type: 'radar', data: chartData, options: chartOptions});
-            
-            var labels=r.labels;
-            var values=r.values;
+          var dpro = _txtpro.val();
+          app.log('[m_giacenze] updateView dpro=' + dpro);
+          if(dpro=='') {
+            window.plugins.toast.showWithOptions({
+              message: "Specificare prodotto",duration:"short",position:"bottom",styling:{backgroundColor:'#bb0000'}
+            });
+            return;
+          }
+          if(dpro=='###') {
+            setTimeout(function(){
+              app.log('[m_giacenze] changePage("x_log.html")...');
+              $.mobile.changePage("x_log.html");
+            }, 500);
+            return;
+          }
+          if(dpro=='!!!') {
+            window.plugins.toast.show('Notifica di test attivata', 'short', 'bottom');
+            app.notificationTest = true;
+            return;
+          }
+          
+          jrpc.execute("MOBILE.getGiacenze",[{"idf":idf,"dep":dpro}],function(r){
             _tbody.empty();
-            for(var i=0; i < labels.length; i++) {
-              _tbody.append('<tr><td>' + labels[i] + '</td><td style="text-align:right;">' + values[i].toLocaleString() + '</td></tr>');
+            for(var i=0; i < r.length; i++) {
+              if(r[i][1]==0){
+                _tbody.append('<tr><td><span style="color:#cc0000;">' + r[i][0] + '</a></td><td style="text-align:right;"><span style="color:#cc0000;">' + r[i][1] + '</span></td></tr>');
+              }
+              else {
+                _tbody.append('<tr><td>' + r[i][0] + '</td><td style="text-align:right;">' + r[i][1] + '</td></tr>');
+              }
             }
             _table.table();
             enableTablesorter(_table);
-          },app.onRpcError);
+            
+            $('[data-role="page"]').animate({scrollTop:$("#tdata").offset().top-130},1000);
+            
+            window.plugins.toast.show(r.length + ' referenze trovate', 'short', 'bottom');
+          }, app.onRpcError);
         }
       </script>
     </div>

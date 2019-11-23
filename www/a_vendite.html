@@ -120,7 +120,7 @@
           app.log('[a_vendite] updateView idf=' + idf);
           if(!idf) return;
           
-          jrpc.test("CRUSCOTTO.rapportiVendita",[{"fs2":"14/11/2019","fs1":"21/11/2019","is1":"15/11/2019","dgi":0.63301939957745,"is2":"08/11/2019","fm2":"21/10/2019","fm1":"21/11/2019","im1":"22/10/2019","gi1":"21/11/2019","im2":"21/09/2019","gi2":"14/11/2019","peg":"-36,70","vs2":"17.089,61","vs1":"20.860,60","pem":"+4,50","vm2":"81.593,53","vm1":"85.268,06","pet":"-6,74","pes":"+22,07","vg2":"4.207,60","vg1":"2.663,49","ft1":"21/11/2019","dtr":0.9325570436626619,"ft2":"21/08/2019","it2":"21/05/2019","it1":"22/08/2019","vt1":"219.555,24","vt2":"235.433,58","dse":1.2206598618782047,"dme":1.0450345900340292}],function(r){
+          jrpc.execute("CRUSCOTTO.rapportiVendita",[{"idf":idf}],function(r){
             _title1.html('<strong>Rapporto giornaliero</strong>');
             _gauge1.update(r.dgi * 100);
             _notes1.html('Venduto lordo '+r.gi1+': <b>'+r.vg1+' &euro;</b><br>Venduto lordo '+r.gi2+': <b>'+r.vg2+' &euro;</b>');

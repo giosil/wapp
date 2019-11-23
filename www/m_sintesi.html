@@ -104,7 +104,7 @@
           if(_lastfilter==filter)return;
           _lastfilter=filter;
           
-          jrpc.test("MOBILE.getSintesiVendite",[[["Numero clienti","105"],["Venduto lordo","2.663,49 &euro;"],["Venduto netto","2.610,88 &euro;"],["Scontrini emessi","92"],["Totale prodotti","251"],["Importo cassa","1.843,39 &euro;"],["Margine","878,88 &euro;"],["Ultima vendita","21/11/2019 19:02:05"]]],function(r){
+          jrpc.execute("MOBILE.getSintesiVendite",[{"idf":idf,"pd":fdate}],function(r){
             _tbody.empty();
             if(r.length > 0) {
               for(var i=0; i < r.length; i++) {
