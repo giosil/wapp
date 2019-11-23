@@ -74,8 +74,8 @@ var app = {
     //    this.log('j_playerID=' + localStorage.getItem('j_playerID'));
     //  });
     
-    document.addEventListener("pause",      this.onResume.bind(this),      false);
-    document.addEventListener("resume",     this.onPause.bind(this),       false);
+    document.addEventListener("pause",      this.onPause.bind(this),       false);
+    document.addEventListener("resume",     this.onResume.bind(this),      false);
     document.addEventListener('backbutton', this.onBackKeyDown.bind(this), false);
   },
   
