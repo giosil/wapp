@@ -1,6 +1,6 @@
 # WApp - Wrapped App Mobile
 
-A simple cordova hybrid mobile app based on jQuery Mobile.
+A template of Cordova hybrid app based on jQuery Mobile.
 
 ## Requirements
 
